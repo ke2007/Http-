@@ -31,7 +31,7 @@ URI (Uniform Resource Identifier)
 
         scheme://[userinfo]host[:port][/path][?query][#fragment]
 
-        https://www.google.com:443/serch?q=hello&hl=ko
+        https://www.google.com/serch?q=hello&hl=ko
 
         프로토콜(https)
         호스트명(www.google.com)
@@ -74,3 +74,45 @@ URI (Uniform Resource Identifier)
         fragment
             html 내부 북마크 등에 사용( ex : 나무위키의 #1,#2 다이렉트)
             서버에 전송되는 정보가 아니다!
+    
+    웹 브라우저의 요청 흐름
+        작동순서는?
+        https://www.google.com/serch?q=hello&hl=ko
+            -> DNS를 조회, PORT는 https이므로 생략(443 PORT)
+            -> HTTP 요청 메시지를 생성!
+
+        HTTP 요청 메시지
+            -> GET /serch?q=hello&hl=ko HTTP/1.1
+               Host:www.google.com
+        
+        ->  어플리케이션 계층  {    웹 브라우저        :  1. 웹 브라우저가http 메시지 생성
+                                   SOCKET 라이브러리   :  2. SOCKET라이브러리를 통해 전달
+                                                                -A: TCP/IP 연결(IP,PORT정보) ->3way handshake 구글서버와 연결
+                                                                -B: 데이터 전달
+            OS계층             {    TCP/IP            :   3.TPC/IP 패킷 생성, HTTP 메시지 포함
+
+
+            네트워크 인터페이스 {   LAN 드라이버, LAN 장비 : 를 통해 패킷정보가 인터넷 - >서버로 이통
+
+            TCP/IP 패킷
+                    > 출발지IP, 목적지 IP, 기타(...) 안에( IP패킷 )
+                    -> 출발지 PORT, 목적지 PORT, 전송제어정보, 순서정보, 검증정보 안에(TCP 세그먼트)
+                    --> GET /serch?q=hello&hl=ko HTTP/1.1
+                        Host:www.google.com
+            
+            구글서버로 요청 패킷이 도착하면?
+                    -> TCP/IP패킷을 까서 버리고, http메시지를 꺼내서 해석하고 HTTP 응답 메시지를 생성 ex) 구글서버: '쿼리가 헬로..hl이 한국어..'
+
+            HTTP 응답 메시지
+                -> HTTP/1.1 200 OK
+                   Content-Type:text/html;charset=UFT-8
+                   Content-Length:3423 //밑의 html 데이터의 길이
+
+                   <html>
+                     <body>...</body>
+                   </html>
+            
+            구글도 똑같이 TCP/IP 패킷으로 감싸서 응답패킷을 클라이언트로 전송
+                ->클라이언트가 html데이터를 까서 웹브라우저가 렌더링.
+
+            
