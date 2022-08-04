@@ -1,0 +1,31 @@
+URI (Uniform Resource Identifier)
+    -> 리소스를 식별하는 통합된 방법?! , URI , URL URN ? 
+    -> URI는 로케이터(locater), 이름(Name) 또는 둘 다를 추가해서 분류할수있다.
+
+    URI(Resource Identifier)의 포함관계
+    -> URL(Resource locater) 리소스의 위치  , URN(Resource Name) 리소스의 이름  포함
+
+    URL(Resource locater) 의 형태
+        foo://example.com:8042/over/there?Name=ferret#nose
+    URN(Resource Name) 의 형태 ( 매핑이 어렵기때문에 거의 안씀)
+        urn:example:animal:ferret:nose
+
+    URI
+        Uniform : 리소스를 식별하는 통일된 방식
+        Resource : 자원, URI로 식별할 수 있는 모든 것 ( 제한없음 )
+        Identifier : 다른 항목과 구분하는데 필요한 정보 ( 주민번호로 식별한다? 그러면 주민번호가 Identifier가 됩니다~)
+
+    URL과 URN
+        URL -> ' 리소스가 여기있을거야~ '
+        URN -> ' 리소스이 이름을 부여 '
+        위치는 변할 수 있지만 , 이름은 변하지 않는다.
+
+        URN 이름만으로 실제 리소스를 찾을 수 있는 방법 자체가 보편화 되어있지 않다. ( 사용이 어렵다! )
+
+    URL을 분석해보자
+        https://www.google.com/serch?q=hello&hl=ko
+
+        -> q는 쿼리, hl은 언어,
+
+        scheme://[userinfo]host[:port][/path][?query][#fragment]
+
