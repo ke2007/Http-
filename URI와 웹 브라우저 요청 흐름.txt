@@ -40,4 +40,37 @@ URI (Uniform Resource Identifier)
         쿼리파라미터(q=hello&hl=ko)
 
 
-        ->
+        scheme(스키마)
+            -> 주로 프로토콜(어떤 방식으로 자원에 접근할 것인가 하는 약속 규칙, http, https, ftp등등)이 사용됨
+            http는 80포트 , https는 443 포트를 주로 사용, 포트는 생략 가능.
+            https는 http에 보안을 추가한것(HTTP Secure)
+
+        userinfo( 거의 안씀)
+            URL에 사용자 정보를 포함해서 인증
+            거의 사용하지않음
+        
+        host
+            호스트명
+            도메인명 또는 IP주소를 직접 사용가능
+        
+        PORT
+            접속 포트'
+            일반적으로 생략시 http는 80 https 는 443
+            특정서버에 따로 접근해야할땐 입력
+        
+        path
+            리소스 경로(path), 계층적 구조
+        
+            예)
+            /home/file1.jpg -> home 디렉토리의 file1.jpg
+            /members -> 회원들에대한 어떤 정보를 보여주는 웹사이트
+            /members/100 -> 100 번이라는 id의 회원
+
+        query
+            key=value의 형태로 구성
+            ?로 시작, &로 추가 가능, ? keyA=valueA&keyB=valueB
+            query parameter, query string(숫자를 적어도 다 문자로 넘어감) 등으로 불림, 웹서버에 제공하는 파라미터
+
+        fragment
+            html 내부 북마크 등에 사용( ex : 나무위키의 #1,#2 다이렉트)
+            서버에 전송되는 정보가 아니다!
