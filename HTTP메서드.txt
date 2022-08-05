@@ -3,7 +3,7 @@
         회원 조회 / read-member-by-id
         회원 등록 / create-n member
         회원 수정 / update-member
-        회원 삭제 / delete-member
+        회원 삭제 / delete-member 
     
 과연 좋은 URI설계인가 ( 제일 중요한건 '리소스 식별' )
     ->  리소스의 의미는 뭘까
