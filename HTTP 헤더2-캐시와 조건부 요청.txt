@@ -1,0 +1,262 @@
+HTTP 헤더2 -캐시와 조건부 요청
+    캐시의 기본동작
+        
+        
+        캐시가 없을때
+            첫번째 요청
+
+
+                요청1                                                                   
+
+                웹 브라우저     GET /star.jpg ->                                            서버
+                                                        <-     HTTP/1.1 200 OK
+                                                               Content-Type: image/jpeg
+                                                               Content-Length: 34012
+                                        star.jpg 전송
+                                                               31234n51k2j35jk123ghh1v235hj12v3h5jv12j3h5v(이미지바이트코드)
+
+                                                               ※star.jpg(1.1M가정 HTTP헤더:0.1M,HTTP바디:1.0M)
+
+
+            두번째 요청
+                        똑같이 star.jpg(1.1M) 전송 2
+
+            
+            데이터가 변경되지 않아도 계속 네트워크를 통해서 데이터를 다운로드 받아야한다
+            인터넷 네트워크는 매우 느리고 비싸다.
+            브라우저 로딩 속도가 느리다
+            느린 사용자 경험
+        
+        캐시 적용
+            첫번째 요청
+
+            요청1                                                                   
+
+                웹 브라우저     GET /star.jpg ->                                            서버
+                                                        <-     HTTP/1.1 200 OK
+                                                               Content-Type: image/jpeg
+                                                               cache-control: max-age=60 ※(캐시가 유효한시간(초단위))
+                                                               Content-Length: 34012
+                                        star.jpg 전송
+                                                               31234n51k2j35jk123ghh1v235hj12v3h5jv12j3h5v(이미지바이트코드)
+
+                                ※star.jpg(1.1M가정 HTTP헤더:0.1M,HTTP바디:1.0M)
+
+
+            브라우저 캐시에 응답결과를 캐시에 60초 유효한 캐시를 저장함!!
+
+            두번째 요청
+                웹브라우저 : 캐시를 먼저 뒤지고 캐시 유효 시간 검증 후에, 캐시에서 조회후 바로 star.jpg를 가져옴
+            
+            캐시덕분에 캐시가능 시간동안 네트워크를 사용하지 않아도 된다.
+            비싼 네트워크 사용량을 줄일 수 잇다.
+            브라우저 로딩 속도가 매우 빠르다
+            빠른 사용자 경험
+
+            
+            세번째 요청 - 캐시 시간초과
+
+
+                웹 브라우저     GET /star.jpg ->                                            서버
+                                                        <-     HTTP/1.1 200 OK
+                                                               Content-Type: image/jpeg
+                                                               cache-control: max-age=60 ※(캐시가 유효한시간(초단위))
+                                                               Content-Length: 34012
+                                        star.jpg 전송
+                                                               31234n51k2j35jk123ghh1v235hj12v3h5jv12j3h5v(이미지바이트코드)
+
+                                ※star.jpg(1.1M가정 HTTP헤더:0.1M,HTTP바디:1.0M)
+            
+            ※캐시 유효시간이 초과하면, 서버를 통해 데이터를 다시 조회하고, 캐시를 갱신함.
+              이때 다시 네트워크 다운로드가 발생한다.
+              근데 star.jpg는 안바뀌었는데 전체를 다시 다운로드받는건 좀 아까운데.... 밑에서 알아보자
+
+            
+            캐시 시간초과
+                캐시 유효시간이 초과해서 서버에 다시 요청하면 다음 두 가지 상황이 나타난다.
+                    1. 서버에서 기존 데이터를 변경함.
+                    2. 서버에서 기존 데이터를 변경하지 않음.
+
+                    2.의 경우
+                    생각해보면 데이터를 전송하는 대신에 , 저장해 두었던 로컬캐시를 재사용 할 수있다
+                    단, 클라이언트의 데이터와 서버의 데이터가 같다는 사실을 확인할 수 있는 방법이 필요하다 -!! (검증헤더)
+
+
+                    검증헤더 추가
+            요청1                                                                   
+                        
+                웹 브라우저     GET /star.jpg ->                                            서버
+                                                        <-     HTTP/1.1 200 OK
+                                                               Content-Type: image/jpeg
+                                                               cache-control: max-age-60
+                                                               Last-Modified: "2020-11-10 10:00:00"  //데이터가 마지막에 수정된 시간
+                                                               Content-Length: 34012
+                                        star.jpg 전송
+                                                               31234n51k2j35jk123ghh1v235hj12v3h5jv12j3h5v(이미지바이트코드)
+
+                                                               ※star.jpg(1.1M가정 HTTP헤더:0.1M,HTTP바디:1.0M)
+
+                브라우저 캐시 : "응답결과를 캐시에 저장하고,,60초 유효에,,데이터 최종 수정일은 "2020-11-10 10:00:00" 이구나.."
+
+            캐시유효시간인 60초후 두번째 요청
+
+                브라우저 캐시: "음 최종 수정일이 "2020-11-10 10:00:00"인뎅.."
+
+                클라이언트 :                                                                        서버:
+                GET /star.jpg
+                if-modified-since: "2020-11-10 10:00:00"      ->                                "어 날짜가 똑같네==데이터가 변경이 안됐네"        
+                                                                <-  HTTP/1.1 304 Not Modified
+                                                                    Content-Type: image/jpeg
+                                                                    cache-control: max-age=60
+                                                                    Last-Modified: "2020-11-10 10:00:00"
+                                                                    Content-Length: 34012
+
+                                                                    중요 : (HTTP Body가 없음)
+                                                                    
+                                        <- 0.1M전송(※star.jpg[HTTP헤더:0.1M])
+
+                브라우저 캐시: " 아 304 Not Modified네? 재사용해도 되는구나,"
+                    -> cache-control값 (60초) 갱신, 데이터 최종 수정일도 갱신(할지말지는 브라우저마음)
+
+                
+                검증헤더와 조건부 요청
+                    캐시 유효시간이 초과되도, 서버의 데이터가 갱신되지 않으면
+                    304 Not Modified+헤더 메타 정보만 응답(HTTP 바디X)
+                    클라이언트는 서버가 보낸 응답 헤더 정보로 캐시의 메타 정보를 갱신
+                    클라이언트는 캐시에 저장되어 있는 데이터 재활용
+                    결과적으로 네트워크 다운로드가 발생하지만 용량이 적은 헤더 정보만 다운로드
+                    매우 실용적인 해결책
+
+                검증 헤더
+                    캐시 데이터와 서버 데이터가 같은지 검증하는 데이터
+                    Last-Modified, ETag가 있다 .
+
+                조건부 요청 헤더
+                    검증 헤더로 조건에 따른 분기
+                    if-Modified-since: Last-Modified 사용
+                    if-None-Match: ETag 사용
+
+                    조건이 만족하면(변경이 일어났네요 다시보내줌(여긴 당연히 헤더와 HTTP BODY가 포함된다) ) 200 OK
+                    조건이 만족하지 않으면(안바뀌었는데? 캐시 리다이렉션해서쓰세요) 304 Not Modified
+
+
+                if-Modified-since: Last-Modified 단점
+                
+                    1초미만(0.x초) 단위로 캐시 조정이 불가능
+                    날짜 기반의 로직 사용
+                    데이터를 수정해서 날짜가 다르지만, 같은 데이터를 수정해서 데이터 결과가 똑같은 경우(a->b->a로 수정한 경우, 날짜는 변경됐지만 내용은 똑같음)
+                    서버에서 별도의 캐시 로직을 관리하고싶은 경우
+                        예) 스페이스나 주석처럼 크게 영향이 없는 변경에서 캐시를 유지하고 싶은경우
+
+                        -> ETag를 쓰세요 그게뭔데요
+                
+                ETag
+                    (Entity Tag)
+                    캐시용 데이터에 임의의 고유한 버전이름을 달아둠.
+                        예) ETag: "v1.0", ETag: "a2jiodwjekji3" //hash 알고리즘에 파일을 집어넣었을때 컨텐츠 내용이 똑같으면 hash값도 똑같이나옴
+                    데이터가 변경되면 이 이름을 바꾸어서 변경함(Hash를 다시 생성)
+                        예) ETag: "aaaa" => ETag: "bbbb"
+                    진짜 단순하게 ETag만 보내서 같으면 유지, 다르면 다시 받기! 
+
+
+                웹 브라우저     GET /star.jpg ->                                            서버
+                                                        <-     HTTP/1.1 200 OK
+                                                               Content-Type: image/jpeg
+                                                               cache-control: max-age-60
+                                                               ETag: "aaaa"
+                                                               Content-Length: 34012
+                                        star.jpg 전송
+                                                               31234n51k2j35jk123ghh1v235hj12v3h5jv12j3h5v(이미지바이트코드)
+
+                                                               ※star.jpg(1.1M가정 HTTP헤더:0.1M,HTTP바디:1.0M)
+
+                브라우저 캐시는 ETag를 저장
+
+
+                클라이언트 :                                                                        서버:
+                GET /star.jpg
+                if-None-Match: "aaaa"      ->                             "어 ETag가 똑같네, 실패했네? 데이터가 변경이 안됐네? 실패했으면 304 ~"        
+                                                                <-  HTTP/1.1 304 Not Modified
+                                                                    Content-Type: image/jpeg
+                                                                    cache-control: max-age=60
+                                                                    ETag: "aaaa"
+                                                                    Content-Length: 34012
+
+                                                                    중요 : (HTTP Body가 없음)
+                                                                    
+                                        <- 0.1M전송(※star.jpg[HTTP헤더:0.1M])
+                
+                브라우저 캐시 : 응답결과 재사용, 헤더 데이터 갱신.
+
+
+                ETag, If-None-Match 정리
+                    진짜 단순하게 ETag만 서버에 보내서 같으면 유지, 다르면 다시받기
+                    캐시 제어 로직을 서버에서 완전히 관리
+                    클라이언트는 단순히 이 값을 서버에 제공(클라이언트는 캐시 메커니즘을 모름)
+                        예)
+                            어플리케이션 배포주기에 맞춰서 ETag를 모두 갱신
+                
+            
+            캐시와 조건부 요청 헤더
+                캐시 제어 헤더
+                    Cache-Control: 캐시 제어
+                    Pragma: 캐시 제어(하위호환)
+                    Expires: 캐시 유효기간(하위 호환)
+
+
+                    Cache-Control
+                        캐시 지시어
+
+                            Cache-Control: max-age
+                                캐시 유효기간, 초단위 (보통 길게 잡는다)
+                            Cache-Control: no-cache
+                                데이터는 캐시해도 되지만, 항상 원(origin)서버에 검증하고 사용해라!!(if-modified-since 혹은 if-None-Match를 써서 검증)
+                            Cache-Control: no-store
+                                데이터에 민감한 정보가 있으므로 저장하면 안됨
+                                (메모리에서 사용하고 최대한 빨리 삭제)
+                            
+                    Pragma
+                        Pragma: no-cache
+                        HTTP 1.0 하위호환 //거의 안씀/하위호환때문에 필요하면 쓸수도?..
+
+                    Expires
+                        캐시 만료일 지정(하위호환)
+                        expires: Mon, 01 jan 1990 00:00:00 GMT
+
+                        캐시만료일을 정확한 날짜로 지정
+                        HTTP 1.0부터 사용
+                        지금은 더 유연한 Cache-Control: max-age 권장
+                        Cache-Control: max-age과 함께 쓰면 Expires는 무시된다! 
+
+            프록시 캐시
+                원서버 직접접근
+                origin 서버
+
+                한국에있는 클라이언트                               미국에있는 origin서버
+
+                웹브라우저1
+                웹브라우저2              -> 1,2,3 모두 500ms ->             서버                                     
+                웹브라우저3
+
+                너무 느린데? 프록시 캐시 서버 를 설치해야겠어! //CDN(콘텐츠 전송네트워크) 서비스 AWS 클라우트프론트 같은거)
+
+            한국에있는 클라이언트                                           미국에있는 origin서버
+                (Private cache)
+                웹브라우저1                        (Public cache)
+                웹브라우저2       100ms       -> 프록시 캐시 서버 ->     400ms        서버                                     
+                웹브라우저3                       (한국 어딘가 )
+
+                ->  기존에 500ms걸리던게 100ms걸리는!!  // 이 예로 유튜브에서 사람들이 잘 안보는 해외 컨텐츠를 보려고하면 로딩이 매우 느림..
+
+            
+            Cache-Control
+                캐시 지시어(directives)- 기타
+                    
+                    Cache-Control: public
+                        응답이 public 캐시에 저장 되어도 됨!
+                    Cache-Control: private
+                        응답이 해당 사용자만을 위한것임, private 캐시에 저장해야함(기본값)
+                    Cache-Control: s-maxage
+                        프록시 캐시에만 적용되는 max-age
+                    Age:60 (HTTP 헤더)
+                        Origin서버에서 응답후 프록시 캐시 내에 머문시간(초)
