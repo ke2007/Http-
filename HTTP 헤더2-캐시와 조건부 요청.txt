@@ -260,3 +260,46 @@ HTTP 헤더2 -캐시와 조건부 요청
                         프록시 캐시에만 적용되는 max-age
                     Age:60 (HTTP 헤더)
                         Origin서버에서 응답후 프록시 캐시 내에 머문시간(초)
+
+        Cache-Control
+            확실한 캐시 무효화 응답
+                ->  " 어 캐시 적용안하면 캐시 적용안되는거아닌가요? " 브라우저들이 임의로 "흠...이정도면 캐시해야지.."하면서 캐시 합니다
+                    " 아 이 페이지(사용자의 통장잔고는..갱신이되니까)는 캐시하면 안된다고!!!!!!!! "
+                        ->  얘네를 다 넣으세요  
+
+                            Cache-Control: no-cache, nostore, must-revalidate             
+                            Pragma: no-cache
+                                HTTP 1.0하위호환 //혹시 과거 브라우저에서 올수도있기때문
+
+                            Cache-Control: must-revalidate
+                                캐시 만료 후  최초 조회시 원서버에서 검증해야함
+                                원서버 접근 실패시 반드시 오류가 발생해야함 - 504(Gateway TimeOut)
+                                must-revalidate는 캐시 유효 시간이라면 캐시를 사용함
+                            Pragma: no-cahce
+                                HTTP 1.0 하위호환 //늙은 버전은 Cache-Controll을 모름..
+            
+            아니 no-cahce만 해도 되는거 아니에요??
+
+            no-cahce  VS must-revalidate
+
+            no-cahce 기본동작
+
+                웹브라우저 : 1. 캐시서버요청 no-cahce + ETag  => 프록시 캐시 : "헉 이건(no-cache) 내가하면안돼 origin서버로 요청해야겠다"
+                    => origin서버 검증 : " 흠 내가 검증해줄게 아직 써도 괜찮네!  " => 프록시 캐시서버에  304 Not Modified 응답
+
+                
+                근데!!!!! 프록시 캐시서버가 origin서버로 no-cahce요청을 보낼때 네트워크가 단절된다면?..
+                        ->  프록시 : "옛날 데이터라도 보여줄게"  라는 설정을 할 경우도 있다.
+                        ->  " 200 OK "
+
+                        -> 이게 No-cahce의 정책입니다.
+                
+            must-revalidate가 위와 같은 경우라면?
+                -> 프록시캐시서버가 504 Gateway TimeOut을 클라이언트로 뱉어낸다
+                    -> 돈과 관련된 문제라고 생각해보면.. 
+                
+                -> 그렇기때문에 must-revalidate까지 넣어준다~
+
+
+
+
